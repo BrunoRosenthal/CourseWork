@@ -1,5 +1,6 @@
 import login
 import quiz
+import analytics
 import sqlite3
 
 # next function gives menu for logged in users
@@ -29,21 +30,20 @@ def logged_in(user):
         userChoice = input("What quiz/analytics tool do you want? ")
         choices = len(quizzes_menu) - 3
 
-        try:
-            if userChoice == str(choices + 1):
-                analytics.showScores()
 
-            elif userChoice == str(choices + 2):
-                analytics.graph()
+        if userChoice == str(choices + 1):
+            analytics.showScores(user)
 
-            elif userChoice == str(choices + 3):
-                break
+        elif userChoice == str(choices + 2):
+            analytics.graph(user)
 
-            elif int(userChoice) <= choices:
-                quiz.quiz(userChoice,user)
+        elif userChoice == str(choices + 3):
+            break
 
-        except:
-            print("This input isn't recognised")
+        elif int(userChoice) <= choices:
+            quiz.quiz(userChoice,user)
+
+
 
 while True:
     choice = int(input("""
@@ -58,7 +58,7 @@ while True:
 
     if choice == 2:
         go = login.user_login()
-        if go[0] == "Y":
+        if go[0] != "N":
             logged_in(go[1])
         else:
             break

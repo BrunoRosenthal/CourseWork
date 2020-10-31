@@ -16,8 +16,8 @@ def user_login():
         if valid_user:
             for j in valid_user:
                 print("Welcome "+j[2])
-                start = input("Would you like to start a quiz, Y/N ")
-                return(start, j[0])
+                start = input("Would you like to start a quiz or see your results? Y/N ")
+            return(start, j[0])
 
         if i == 2:
             print("Sorry, too many failed login attempts, please wait 10 seconds ")

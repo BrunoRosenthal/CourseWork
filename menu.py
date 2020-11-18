@@ -48,9 +48,11 @@ def logged_in(user):
 while True:
     choice = int(input("""
     Please choose from the following:
+    
     1 - Create account
     2 - Login to existing account
     3 - Exit
+    
     """))
 
     if choice == 1:
@@ -66,5 +68,5 @@ while True:
     if choice == 3:
         break
 
-    else:
+    elif choice not in[1, 2, 3]:
         print("please choose a number between 1 and 3 ")

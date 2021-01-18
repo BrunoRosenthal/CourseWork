@@ -1,4 +1,4 @@
-#havent mreged the new progress as it doesnt yet work.
+#haven't merged the new progress as it doesn't yet work.
 
 import tkinter as Tk
 

@@ -22,7 +22,7 @@ def quiz(quiz, user):
         else:
             print("Incorrect")
         numQu +=1
-        print("You have finished this quiz")
+    print("You have finished this quiz")
 
     scorePercent = int((score/numQu)*100)
     print("You scored %s percent" %scorePercent)
@@ -30,3 +30,4 @@ def quiz(quiz, user):
     insertData = ("INSERT INTO scores(userID, score, quizID) VALUES(?,?,?);")
     cursor.execute(insertData, [(user), (scorePercent), (quiz)])
     db.commit()
+

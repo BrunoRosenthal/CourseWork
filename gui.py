@@ -251,7 +251,7 @@ class Gui(tk.Frame):
                 time.sleep(1)
 
 
-            if question[x] == question[7]:
+            if question[ans] == question[7]:
                 self.clearFrame()
 
                 self.congrats = tk.Label(self.master, text="Correct")

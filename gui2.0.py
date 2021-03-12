@@ -11,6 +11,8 @@ class Gui(tk.Frame):
         master.title("Quiz Game")
         master.resizable(0, 0)
 
+        self.score = 0
+
         self.frame = tk.Frame(self.master)
         self.frame.grid()
 
@@ -211,81 +213,112 @@ class Gui(tk.Frame):
         quitBtn = tk.Button(self.master, text="quit", command=self.master.destroy)
         quitBtn.grid(row=1, column=4, padx=10, pady=10)
 
-    def quizChoice(self, quiz, question):
+    def correct(self, quiz, question):
+        self.score += 1
+        question = str(int(question) + 1)
+
         self.clearFrame()
 
-        if question == 3:
-            scorePercent = int((score / numQu) * 100)
+        self.congrats = tk.Label(self.master, text="Correct")
+        self.congrats.grid(row=0, column=0)
 
-            insertData = "INSERT INTO scores(userID, score, quizID) VALUES(?,?,?);"
-            cursor.execute(insertData, [self.user, scorePercent, quiz])
-            db.commit()
+        self.ok = tk.Button(self.master, text='ok', command=self.quizChoice(quiz, question))
+        self.ok.grid(row=1, column=0)
 
-            self.clearFrame()
+    def incorrect(self, quiz, question):
+        question = str(int(question) + 1)
 
-            self.finish = tk.Label(self.master, text="You have finished the quiz")
-            self.finish.pack(row=0, column=0)
+        self.failure = tk.Label(self.master, text="Incorrect")
+        self.failure.grid(row=0, column=0)
 
-            self.scored = tk.Label(self.master, text=("You scored %s percent" % scorePercent))
-            self.scored.pack(row=1, column=0)
+        self.ok = tk.Button(self.master, text='ok', command=self.quizChoice(quiz, question))
+        self.ok.grid(row=1, column=0)
 
-            self.ok = tk.Button(self.master, text='ok', command=self.mainMenu())
-            self.ok.pack(row=2, column=0)
+    def checker(self, quiz, question, prevAns, prevCorrect):
+        self.clearFrame()
+
+        if prevAns == prevCorrect:
+            self.correct(quiz, question)
 
         else:
-            question = str(int(question)+1)
+            self.incorrect(quiz, question)
+
+
+    def finished(self):
+        scorePercent = int((self.score / 3) * 100)
+
+        with sqlite3.connect("quiz.db")as db:
+            cursor = db.cursor()
+
+        check = "SELECT * FROM user WHERE username = ?"
+        cursor.execute(check, [self.username])
+
+        self.userID = check[0]
+
+        insertData = "INSERT INTO scores(userID, score, quizID) VALUES(?,?,?);"
+        cursor.execute(insertData, [self.userID, scorePercent, quiz])
+        db.commit()
+
+        self.clearFrame()
+
+        self.finish = tk.Label(self.master, text="You have finished the quiz")
+        self.finish.grid(row=0, column=0)
+
+        self.scored = tk.Label(self.master, text=("You scored %s percent" % scorePercent))
+        self.scored.grid(row=1, column=0)
+
+        self.ok = tk.Button(self.master, text='ok', command=self.mainMenu())
+        self.ok.grid(row=2, column=0)
+
+    def quizChoice(self, quiz, question):
+
+        self.clearFrame()
+
+        print(self.score)
+
+        if question == "0":
+            self.score = 0
+
+        if question == "3":
+            self.finished()
+
+
+        else:
 
             with sqlite3.connect("quiz.db")as db:
                 cursor = db.cursor()
 
-            self.score = 0
             cursor.execute("SELECT * FROM questions WHERE quizID=? AND questionID=?;", [quiz, question])
             q = cursor.fetchall()
-            questions = q[0]
             print(q)
-            print(questions)
+            questions = q[0]
 
-            ans = tk.IntVar()
 
-            self.questionLabel = tk.Label(self.master, text=questions[2])
+
+            self.questionLabel = tk.Label(self.master, text="what is the value of "+questions[2])
             self.questionLabel.grid(row=0, column=0)
 
-            self.ansBtn1 = tk.Button(self.master, text=questions[3], command=lambda: ans.set(3))
+            self.ansBtn1 = tk.Label(self.master, text=questions[3])
             self.ansBtn1.grid(row=1, column=0)
 
-            self.ansBtn2 = tk.Button(self.master, text=questions[4], command=lambda: ans.set(4))
+            self.ansBtn2 = tk.Label(self.master, text=questions[4])
             self.ansBtn2.grid(row=1, column=1)
 
-            self.ansBtn3 = tk.Button(self.master, text=questions[5], command=lambda: ans.set(5))
+            self.ansBtn3 = tk.Label(self.master, text=questions[5])
             self.ansBtn3.grid(row=2, column=0)
 
-            self.ansBtn4 = tk.Button(self.master, text=questions[6], command=lambda: ans.set(6))
+            self.ansBtn4 = tk.Label(self.master, text=questions[6])
             self.ansBtn4.grid(row=2, column=1)
 
-            self.ok = tk.Button(self.master, text="Submit answer", command=lambda: self.quizChoice(quiz, question))
-            self.ok.grid(row=3, column=1)
+            self.text = tk.Label(self.master, text="Enter your answer here:")
+            self.text.grid(row=3, column = 0)
 
-            answers = int(ans)
-            if questions[answers] == questions[7]:
-                self.clearFrame()
+            self.entry = tk.Entry(self.master)
+            self.entry.grid(row=3, column=1)
 
-                self.congrats = tk.Label(self.master, text="Correct")
-                self.congrats.pack(row=0, column=0)
+            self.ok = tk.Button(self.master, text="Submit answer", command=self.checker(quiz, question, self.entry.get(), questions[7]))
+            self.ok.grid(row=4, column=0, columnspan=2)
 
-                self.ok = tk.Button(self.master, text='ok')
-                self.ok.pack(row=1, column=0)
-
-                score += 1
-
-            else:
-                self.clearFrame()
-
-                self.failure = tk.Label(self.master, text="Incorrect")
-                self.failure.pack(row=0, column=0)
-
-                self.ok = tk.Button(self.master, text='ok')
-                self.ok.pack(row=1, column=0)
-            numQu += 1
 
 
 

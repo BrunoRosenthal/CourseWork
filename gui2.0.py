@@ -186,16 +186,16 @@ class Gui(tk.Frame):
         quizzesLabel = tk.Label(self.master, text="Quizzes:")
         quizzesLabel.grid(row=0, column=0, padx=10, pady=10)
 
-        additionBtn = tk.Button(self.master, text="addition", command=lambda: self.quizChoice("1", "0"))
+        additionBtn = tk.Button(self.master, text="addition", command=lambda: self.quizChoice("1", "1"))
         additionBtn.grid(row=0, column=1, padx=10, pady=10)
 
-        subtractionBtn = tk.Button(self.master, text="subtraction", command=lambda: self.quizChoice("2"))
+        subtractionBtn = tk.Button(self.master, text="subtraction", command=lambda: self.quizChoice("2", "1"))
         subtractionBtn.grid(row=0, column=2, padx=10, pady=10)
 
-        multiplicationBtn = tk.Button(self.master, text="multiplication", command=lambda: self.quizChoice("3"))
+        multiplicationBtn = tk.Button(self.master, text="multiplication", command=lambda: self.quizChoice("3", "1"))
         multiplicationBtn.grid(row=0, column=3, padx=10, pady=10)
 
-        divisionBtn = tk.Button(self.master, text="division", command=lambda: self.quizChoice("4"))
+        divisionBtn = tk.Button(self.master, text="division", command=lambda: self.quizChoice("4", "1"))
         divisionBtn.grid(row=0, column=4, padx=10, pady=10)
 
         toolsLabel = tk.Label(self.master, text="Tools:")
@@ -210,7 +210,7 @@ class Gui(tk.Frame):
         switchBtn = tk.Button(self.master, text="switch account", command=lambda: self.login())
         switchBtn.grid(row=1, column=3, padx=10, pady=10)
 
-        quitBtn = tk.Button(self.master, text="quit", command=self.master.destroy)
+        quitBtn = tk.Button(self.master, text="quit", command=lambda: self.master.destroy)
         quitBtn.grid(row=1, column=4, padx=10, pady=10)
 
     def correct(self, quiz, question):
@@ -222,7 +222,7 @@ class Gui(tk.Frame):
         self.congrats = tk.Label(self.master, text="Correct")
         self.congrats.grid(row=0, column=0)
 
-        self.ok = tk.Button(self.master, text='ok', command=self.quizChoice(quiz, question))
+        self.ok = tk.Button(self.master, text='ok', command=lambda: self.quizChoice(quiz, question))
         self.ok.grid(row=1, column=0)
 
     def incorrect(self, quiz, question):
@@ -231,7 +231,7 @@ class Gui(tk.Frame):
         self.failure = tk.Label(self.master, text="Incorrect")
         self.failure.grid(row=0, column=0)
 
-        self.ok = tk.Button(self.master, text='ok', command=self.quizChoice(quiz, question))
+        self.ok = tk.Button(self.master, text='ok', command=lambda: self.quizChoice(quiz, question))
         self.ok.grid(row=1, column=0)
 
     def checker(self, quiz, question, prevAns, prevCorrect):
@@ -244,7 +244,10 @@ class Gui(tk.Frame):
             self.incorrect(quiz, question)
 
 
-    def finished(self):
+    def finished(self, quiz):
+
+        self.clearFrame()
+
         scorePercent = int((self.score / 3) * 100)
 
         with sqlite3.connect("quiz.db")as db:
@@ -267,20 +270,20 @@ class Gui(tk.Frame):
         self.scored = tk.Label(self.master, text=("You scored %s percent" % scorePercent))
         self.scored.grid(row=1, column=0)
 
-        self.ok = tk.Button(self.master, text='ok', command=self.mainMenu())
+        self.ok = tk.Button(self.master, text='ok', command=lambda: self.mainMenu())
         self.ok.grid(row=2, column=0)
 
     def quizChoice(self, quiz, question):
 
         self.clearFrame()
 
-        print(self.score)
+        #print(self.score)
 
         if question == "0":
             self.score = 0
 
-        if question == "3":
-            self.finished()
+        if question == "4":
+            self.finished(quiz)
 
 
         else:
@@ -292,7 +295,7 @@ class Gui(tk.Frame):
             q = cursor.fetchall()
             print(q)
             questions = q[0]
-
+            print(quiz)
 
 
             self.questionLabel = tk.Label(self.master, text="what is the value of "+questions[2])
@@ -311,12 +314,12 @@ class Gui(tk.Frame):
             self.ansBtn4.grid(row=2, column=1)
 
             self.text = tk.Label(self.master, text="Enter your answer here:")
-            self.text.grid(row=3, column = 0)
+            self.text.grid(row=3, column=0)
 
             self.entry = tk.Entry(self.master)
             self.entry.grid(row=3, column=1)
 
-            self.ok = tk.Button(self.master, text="Submit answer", command=self.checker(quiz, question, self.entry.get(), questions[7]))
+            self.ok = tk.Button(self.master, text="Submit answer", command=lambda: self.checker(quiz, question, self.entry.get(), questions[7]))
             self.ok.grid(row=4, column=0, columnspan=2)
 
 
@@ -327,3 +330,4 @@ root = tk.Tk()
 G = Gui(root)
 G.startMenu()
 root.mainloop()
+

@@ -189,13 +189,13 @@ class Gui(tk.Frame):
         additionBtn = tk.Button(self.master, text="addition", command=lambda: self.quizChoice("1", "1"))
         additionBtn.grid(row=0, column=1, padx=10, pady=10)
 
-        subtractionBtn = tk.Button(self.master, text="subtraction", command=lambda: self.quizChoice("2", "1"))
+        subtractionBtn = tk.Button(self.master, text="subtraction", command=lambda: self.quizChoice("2", "4"))
         subtractionBtn.grid(row=0, column=2, padx=10, pady=10)
 
-        multiplicationBtn = tk.Button(self.master, text="multiplication", command=lambda: self.quizChoice("3", "1"))
+        multiplicationBtn = tk.Button(self.master, text="multiplication", command=lambda: self.quizChoice("3", "7"))
         multiplicationBtn.grid(row=0, column=3, padx=10, pady=10)
 
-        divisionBtn = tk.Button(self.master, text="division", command=lambda: self.quizChoice("4", "1"))
+        divisionBtn = tk.Button(self.master, text="division", command=lambda: self.quizChoice("4", "10"))
         divisionBtn.grid(row=0, column=4, padx=10, pady=10)
 
         toolsLabel = tk.Label(self.master, text="Tools:")
@@ -277,25 +277,22 @@ class Gui(tk.Frame):
 
         self.clearFrame()
 
-        #print(self.score)
-
         if question == "0":
             self.score = 0
 
         if question == "4":
             self.finished(quiz)
 
-
         else:
+
+            print(self.score)
 
             with sqlite3.connect("quiz.db")as db:
                 cursor = db.cursor()
 
             cursor.execute("SELECT * FROM questions WHERE quizID=? AND questionID=?;", [quiz, question])
             q = cursor.fetchall()
-            print(q)
             questions = q[0]
-            print(quiz)
 
 
             self.questionLabel = tk.Label(self.master, text="what is the value of "+questions[2])
@@ -330,4 +327,5 @@ root = tk.Tk()
 G = Gui(root)
 G.startMenu()
 root.mainloop()
+
 

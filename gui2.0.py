@@ -123,7 +123,7 @@ class Gui(tk.Frame):
 
             self.clearFrame()
 
-            passwordLenError = tk.Label(self.master, text='Your account was not created because '+problems)
+            passwordLenError = tk.Label(self.master, text='Your account was not created because '+problems+'.')
             passwordLenError.grid(row=0, column=0)
 
             ok = tk.Button(self.master, text='ok', command=lambda: self.createAccount())
@@ -201,7 +201,7 @@ class Gui(tk.Frame):
         toolsLabel = tk.Label(self.master, text="Tools:")
         toolsLabel.grid(row=1, column=0, padx=10, pady=10)
 
-        scoresBtn = tk.Button(self.master, text="previous Scores")
+        scoresBtn = tk.Button(self.master, text="previous Scores", command=lambda: self.prevScores())
         scoresBtn.grid(row=1, column=1, padx=10, pady=10)
 
         logoutBtn = tk.Button(self.master, text="logout", command=lambda: self.startMenu())
@@ -277,49 +277,59 @@ class Gui(tk.Frame):
 
         self.clearFrame()
 
-        if question == "0":
-            self.score = 0
+        first = (quiz, question)
 
-        if question == "4":
+        print(first)
+
+        if first in [("1", "4"),("2", "7"),("3", "10"),("4", "13")]:
             self.finished(quiz)
 
-        else:
-
-            print(self.score)
-
-            with sqlite3.connect("quiz.db")as db:
-                cursor = db.cursor()
-
-            cursor.execute("SELECT * FROM questions WHERE quizID=? AND questionID=?;", [quiz, question])
-            q = cursor.fetchall()
-            questions = q[0]
+        elif first in [("1", "1"),("2", "4"),("3", "7"),("4", "10")]:
+            self.score = 0
 
 
-            self.questionLabel = tk.Label(self.master, text="what is the value of "+questions[2])
-            self.questionLabel.grid(row=0, column=0)
+        with sqlite3.connect("quiz.db")as db:
+            cursor = db.cursor()
 
-            self.ansBtn1 = tk.Label(self.master, text=questions[3])
-            self.ansBtn1.grid(row=1, column=0)
-
-            self.ansBtn2 = tk.Label(self.master, text=questions[4])
-            self.ansBtn2.grid(row=1, column=1)
-
-            self.ansBtn3 = tk.Label(self.master, text=questions[5])
-            self.ansBtn3.grid(row=2, column=0)
-
-            self.ansBtn4 = tk.Label(self.master, text=questions[6])
-            self.ansBtn4.grid(row=2, column=1)
-
-            self.text = tk.Label(self.master, text="Enter your answer here:")
-            self.text.grid(row=3, column=0)
-
-            self.entry = tk.Entry(self.master)
-            self.entry.grid(row=3, column=1)
-
-            self.ok = tk.Button(self.master, text="Submit answer", command=lambda: self.checker(quiz, question, self.entry.get(), questions[7]))
-            self.ok.grid(row=4, column=0, columnspan=2)
+        cursor.execute("SELECT * FROM questions WHERE quizID=? AND questionID=?;", [quiz, question])
+        q = cursor.fetchall()
+        questions = q[0]
 
 
+        self.questionLabel = tk.Label(self.master, text="what is the value of "+questions[2])
+        self.questionLabel.grid(row=0, column=0)
+
+        self.ansBtn1 = tk.Label(self.master, text=questions[3])
+        self.ansBtn1.grid(row=1, column=0)
+
+        self.ansBtn2 = tk.Label(self.master, text=questions[4])
+        self.ansBtn2.grid(row=1, column=1)
+
+        self.ansBtn3 = tk.Label(self.master, text=questions[5])
+        self.ansBtn3.grid(row=2, column=0)
+
+        self.ansBtn4 = tk.Label(self.master, text=questions[6])
+        self.ansBtn4.grid(row=2, column=1)
+
+        self.text = tk.Label(self.master, text="Enter your answer here:")
+        self.text.grid(row=3, column=0)
+
+        self.entry = tk.Entry(self.master)
+        self.entry.grid(row=3, column=1)
+
+        self.ok = tk.Button(self.master, text="Submit answer", command=lambda: self.checker(quiz, question, self.entry.get(), questions[7]))
+        self.ok.grid(row=4, column=0, columnspan=2)
+
+    def prevScores(self):
+
+        self.clearFrame()
+        
+        
+        
+        
+        
+        
+        
 
 
 

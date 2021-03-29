@@ -1,6 +1,8 @@
 import tkinter as tk
 import sqlite3
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 
 
 # noinspection PyAttributeOutsideInit
@@ -41,7 +43,7 @@ class Gui(tk.Frame):
         self.nameBox = tk.Entry(self.master)
         self.nameBox.grid(row=0, column=1, padx=10, pady=10)
 
-        surnameLabel = tk.Label(self.master, text='Surame:')
+        surnameLabel = tk.Label(self.master, text='Surname:')
         surnameLabel.grid(row=1, column=0, padx=10, pady=10)
 
         self.surnameBox = tk.Entry(self.master)
@@ -115,7 +117,7 @@ class Gui(tk.Frame):
             created = tk.Label(self.master, text='Your account has been successfully created')
             created.grid(row=0, column=0)
 
-            ok = tk.Button(self.master, text='ok', command=lambda: self.mainMenu())
+            ok = tk.Button(self.master, text='ok', command=lambda: self.startMenu())
             ok.grid(row=1, column=0)
 
         else:
@@ -152,6 +154,22 @@ class Gui(tk.Frame):
 
     def getLoginInputs(self):
         self.username = self.usernameBox.get()
+
+        with sqlite3.connect("quiz.db")as db:
+            cursor = db.cursor()
+
+        getUserID = "SELECT userID FROM user WHERE username = ?"
+        cursor.execute(getUserID, [self.username])
+        ID = cursor.fetchall()
+        if ID:
+            self.userID = ID[0][0]
+        else:
+            wrong = tk.Label(self.master, text="Username or password incorrect")
+            wrong.grid(row=0, column=0)
+
+            ok = tk.Button(self.master, text='ok', command=lambda: self.login())
+            ok.grid(row=1, column=0)
+
         self.password = self.passwordBox.get()
         self.user_login()
 
@@ -210,7 +228,7 @@ class Gui(tk.Frame):
         switchBtn = tk.Button(self.master, text="switch account", command=lambda: self.login())
         switchBtn.grid(row=1, column=3, padx=10, pady=10)
 
-        quitBtn = tk.Button(self.master, text="quit", command=lambda: self.master.destroy)
+        quitBtn = tk.Button(self.master, text="quit", command=self.master.destroy)
         quitBtn.grid(row=1, column=4, padx=10, pady=10)
 
     def correct(self, quiz, question):
@@ -219,20 +237,20 @@ class Gui(tk.Frame):
 
         self.clearFrame()
 
-        self.congrats = tk.Label(self.master, text="Correct")
-        self.congrats.grid(row=0, column=0)
+        congrats = tk.Label(self.master, text="Correct")
+        congrats.grid(row=0, column=0)
 
-        self.ok = tk.Button(self.master, text='ok', command=lambda: self.quizChoice(quiz, question))
-        self.ok.grid(row=1, column=0)
+        ok = tk.Button(self.master, text='ok', command=lambda: self.quizChoice(quiz, question))
+        ok.grid(row=1, column=0)
 
     def incorrect(self, quiz, question):
         question = str(int(question) + 1)
 
-        self.failure = tk.Label(self.master, text="Incorrect")
-        self.failure.grid(row=0, column=0)
+        failure = tk.Label(self.master, text="Incorrect")
+        failure.grid(row=0, column=0)
 
-        self.ok = tk.Button(self.master, text='ok', command=lambda: self.quizChoice(quiz, question))
-        self.ok.grid(row=1, column=0)
+        ok = tk.Button(self.master, text='ok', command=lambda: self.quizChoice(quiz, question))
+        ok.grid(row=1, column=0)
 
     def checker(self, quiz, question, prevAns, prevCorrect):
         self.clearFrame()
@@ -252,33 +270,56 @@ class Gui(tk.Frame):
         with sqlite3.connect("quiz.db")as db:
             cursor = db.cursor()
 
-        check = "SELECT * FROM user WHERE username = ?"
-        cursor.execute(check, [self.username])
-
-        self.userID = check[0]
-
         insertData = "INSERT INTO scores(userID, score, quizID) VALUES(?,?,?);"
         cursor.execute(insertData, [self.userID, scorePercent, quiz])
         db.commit()
 
         self.clearFrame()
 
-        self.finish = tk.Label(self.master, text="You have finished the quiz")
-        self.finish.grid(row=0, column=0)
+        finish = tk.Label(self.master, text="You have finished the quiz")
+        finish.grid(row=0, column=0)
 
-        self.scored = tk.Label(self.master, text=("You scored %s percent" % scorePercent))
-        self.scored.grid(row=1, column=0)
+        scored = tk.Label(self.master, text=("You scored %s percent" % scorePercent))
+        scored.grid(row=1, column=0)
 
-        self.ok = tk.Button(self.master, text='ok', command=lambda: self.mainMenu())
-        self.ok.grid(row=2, column=0)
+        ok = tk.Button(self.master, text='ok', command=lambda: self.mainMenu())
+        ok.grid(row=2, column=0)
+
+    def difficultyChooser(self, quiz, question):
+        with sqlite3.connect("quiz.db")as db:
+            cursor = db.cursor()
+
+        query = "SELECT score FROM scores WHERE userID=? AND quizID=?;"
+        cursor.execute(query, [self.userID, quiz])
+        x = cursor.fetchall()
+
+
+        if x:
+            results = []
+            for i in range(0, len(x)):
+                results.append(x[i][0])
+
+            sum = 0
+
+            for i in range(0, len(results)):
+                sum += results[i]
+
+            avg = sum / len(results)
+            average = str(round(avg, 2))
+
+        if average > 80:
+            self.difficulty = "2"
+
+        else:
+            self.difficulty = "1"
+
+        self.quizchoice(quiz, question)
 
     def quizChoice(self, quiz, question):
 
         self.clearFrame()
 
         first = (quiz, question)
-
-        print(first)
 
         if first in [("1", "4"), ("2", "7"), ("3", "10"), ("4", "13")]:
             self.finished(quiz)
@@ -291,32 +332,33 @@ class Gui(tk.Frame):
 
         cursor.execute("SELECT * FROM questions WHERE quizID=? AND questionID=?;", [quiz, question])
         q = cursor.fetchall()
-        questions = q[0]
+        if q:
+            questions = q[0]
 
-        self.questionLabel = tk.Label(self.master, text="what is the value of " + questions[2])
-        self.questionLabel.grid(row=0, column=0)
+            questionLabel = tk.Label(self.master, text="what is the value of " + questions[2])
+            questionLabel.grid(row=0, column=0)
 
-        self.ansBtn1 = tk.Label(self.master, text=questions[3])
-        self.ansBtn1.grid(row=1, column=0)
+            ansBtn1 = tk.Label(self.master, text=questions[3])
+            ansBtn1.grid(row=1, column=0)
 
-        self.ansBtn2 = tk.Label(self.master, text=questions[4])
-        self.ansBtn2.grid(row=1, column=1)
+            ansBtn2 = tk.Label(self.master, text=questions[4])
+            ansBtn2.grid(row=1, column=1)
 
-        self.ansBtn3 = tk.Label(self.master, text=questions[5])
-        self.ansBtn3.grid(row=2, column=0)
+            ansBtn3 = tk.Label(self.master, text=questions[5])
+            ansBtn3.grid(row=2, column=0)
 
-        self.ansBtn4 = tk.Label(self.master, text=questions[6])
-        self.ansBtn4.grid(row=2, column=1)
+            ansBtn4 = tk.Label(self.master, text=questions[6])
+            ansBtn4.grid(row=2, column=1)
 
-        self.text = tk.Label(self.master, text="Enter your answer here:")
-        self.text.grid(row=3, column=0)
+            text = tk.Label(self.master, text="Enter your answer here:")
+            text.grid(row=3, column=0)
 
-        self.entry = tk.Entry(self.master)
-        self.entry.grid(row=3, column=1)
+            self.entry = tk.Entry(self.master)
+            self.entry.grid(row=3, column=1)
 
-        self.ok = tk.Button(self.master, text="Submit answer",
-                            command=lambda: self.checker(quiz, question, self.entry.get(), questions[7]))
-        self.ok.grid(row=4, column=0, columnspan=2)
+            ok = tk.Button(self.master, text="Submit answer",
+                                command=lambda: self.checker(quiz, question, self.entry.get(), questions[7]))
+            ok.grid(row=4, column=0, columnspan=2)
 
     def prevScores(self):
 
@@ -337,39 +379,90 @@ class Gui(tk.Frame):
         backBtn = tk.Button(self.master, text="back", command=lambda: self.mainMenu())
         backBtn.grid(row=2, column=1, padx=10, pady=10)
 
-        quitBtn = tk.Button(self.master, text="quit", command=lambda: self.master.destroy)
+        quitBtn = tk.Button(self.master, text="quit", command=self.master.destroy)
         quitBtn.grid(row=2, column=2, padx=10, pady=10)
 
     def graph(self, choice):
 
         self.clearFrame()
 
-        y = []
-        xaxis = []
-
         with sqlite3.connect("quiz.db")as db:
             cursor = db.cursor()
 
-        query = ("""SELECT quizzes.quizName, scores.score, user.userID
-            FROM user INNER JOIN (quizzes INNER JOIN scores ON quizzes.quizID = scores.quizID) ON user.userID = scores.userID
-            WHERE ((user.userID)=?) AND ((quizID)=?) ;""")
+        query = "SELECT score FROM scores WHERE userID=? AND quizID=?;"
+        cursor.execute(query, [self.userID, choice])
+        x = cursor.fetchall()
 
-        cursor.execute(query, [(self.userID, choice)])
-        results = cursor.fetchall()
-        for line in results:
-            y.append(line[1])
-            xaxis.append(line[0])
 
-        x = [i for i in range(len(y))]
-        plt.xticks(x, xaxis)
-        plt.bar(x, y)
-        plt.show()
+        if x:
+            results = []
+            for i in range(0, len(x)):
+                results.append(x[i][0])
+
+            sum = 0
+
+            for i in range(0, len(results)):
+                sum += results[i]
+
+            avg = sum / len(results)
+            average = str(round(avg, 2))
+
+            text = tk.Label(self.master, text="Your average score for this topic is "+average)
+            text.grid(row=0, column=0)
+
+            graphBtn = tk.Button(self.master, text="See graph of previous results", command=lambda: self.grapher(results))
+            graphBtn.grid(row=1, column=0, padx=10, pady=10)
+
+            backBtn = tk.Button(self.master, text="back", command=lambda: self.prevScores())
+            backBtn.grid(row=1, column=1, padx=10, pady=10)
+
+            quitBtn = tk.Button(self.master, text="quit", command=self.master.destroy)
+            quitBtn.grid(row=1, column=2, padx=10, pady=10)
+
+        else:
+            text = tk.Label(self.master, text="You are yet to complete a quiz for this subject")
+            text.grid(row=0, column=0)
+
+            backBtn = tk.Button(self.master, text="back", command=lambda: self.prevScores())
+            backBtn.grid(row=1, column=0, padx=10, pady=10)
+
+            quitBtn = tk.Button(self.master, text="quit", command=self.master.destroy)
+            quitBtn.grid(row=1, column=1, padx=10, pady=10)
+
+    def grapher(self, scores):
+
+        self.clearFrame()
+
+        y = []
+        x = []
+
+        for i in range(0, len(scores)):
+            y.append(scores[i])
+            x.append(i)
+
+        fig = Figure(figsize=(5,5), dpi=100)
+        fig.add_subplot(111).bar(x,y)
+
+        canvas = FigureCanvasTkAgg(fig, self.master)
+        canvas.draw()
+        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+        toolbar = NavigationToolbar2Tk(canvas, self.master)
+        toolbar.update()
+        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
 
         backBtn = tk.Button(self.master, text="back", command=lambda: self.prevScores())
-        backBtn.grid(row=2, column=1, padx=10, pady=10)
+        backBtn.pack(side = tk.LEFT, fill=tk.BOTH, expand=1)
 
-        quitBtn = tk.Button(self.master, text="quit", command=lambda: self.master.destroy)
-        quitBtn.grid(row=2, column=2, padx=10, pady=10)
+        quitBtn = tk.Button(self.master, text="quit", command=self.master.destroy)
+        quitBtn.pack(side = tk.RIGHT, fill=tk.BOTH, expand=1)
+
+
+
+
+
+
 
 
 root = tk.Tk()

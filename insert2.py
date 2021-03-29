@@ -1,5 +1,11 @@
+import sqlite3
+
+with sqlite3.connect("quiz.db")as db:
+    cursor = db.cursor()
+
 cursor.execute("""DELETE FROM quizzes""")
 db.commit()
+
 
 cursor.execute("""
 INSERT INTO quizzes(quizName)
